@@ -37,6 +37,12 @@ async def test_user_role(db_session, admin_user):
     assert stored_user.role == UserRole.ADMIN
 
 @pytest.mark.asyncio
+async def test_bulk_user_creation_performance(db_session, users_with_same_role_50_users):
+    result = await db_session.execute(select(User).filter_by(role=UserRole.AUTHENTICATED))
+    users = result.scalars().all()
+    assert len(users) == 50
+
+@pytest.mark.asyncio
 async def test_password_hashing(user):
     assert verify_password("MySuperPassword$1234", user.hashed_password)
 
@@ -50,9 +56,13 @@ async def test_user_unlock(db_session, locked_user):
 
 @pytest.mark.asyncio
 async def test_update_professional_status(db_session, verified_user):
+    """Test updating professional status for a verified user."""
     verified_user.update_professional_status(True)
     await db_session.commit()
+
+    # Verify the updated user status in the database
     result = await db_session.execute(select(User).filter_by(email=verified_user.email))
     updated_user = result.scalars().first()
+
     assert updated_user.is_professional
     assert updated_user.professional_status_updated_at is not None
