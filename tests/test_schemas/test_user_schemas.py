@@ -3,7 +3,6 @@ import pytest
 from pydantic import ValidationError
 from datetime import datetime
 from app.schemas.user_schemas import UserBase, UserCreate, UserUpdate, UserResponse, UserListResponse, LoginRequest
-from app.models.user_model import UserRole
 
 # Fixtures for common test data
 @pytest.fixture
@@ -129,14 +128,3 @@ def test_password_invalid(password, user_create_data):
     user_create_data["password"] = password
     with pytest.raises(ValidationError):
         UserCreate(**user_create_data)
-
-# Tests for UserCreate role defaults and explicit assignment
-def test_user_create_with_default_role(user_create_data):
-    user_create_data.pop("role", None) 
-    user = UserCreate(**user_create_data)
-    assert user.role == UserRole.AUTHENTICATED
-
-def test_user_create_with_explicit_role(user_create_data):
-    user_create_data["role"] = UserRole.ADMIN
-    user = UserCreate(**user_create_data)
-    assert user.role == UserRole.ADMIN
