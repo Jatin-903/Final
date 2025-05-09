@@ -4,18 +4,20 @@ from settings.config import settings
 from app.utils.template_manager import TemplateManager
 from app.utils.smtp_connection import SMTPClient
 
-# Define Mailtrap configuration (for Mailtrap SMTP settings)
+# ✅ FastAPI-Mail configuration using values from settings
 config = ConnectionConfig(
-    MAIL_USERNAME="sd2388",  # Your Mailtrap username
-    MAIL_PASSWORD="Njit@20242024",  # Your Mailtrap password
-    MAIL_FROM="sd2388@njit.edu",  # The email from which you want to send emails
-    MAIL_PORT=587,  # Mailtrap SMTP port
-    MAIL_SERVER="smtp.mailtrap.io",  # Mailtrap SMTP server
-    MAIL_TLS=True,  # Use TLS for security
-    MAIL_SSL=False,  # Disable SSL (Mailtrap uses TLS)
+    MAIL_USERNAME=settings.mail_username,
+    MAIL_PASSWORD=settings.mail_password,
+    MAIL_FROM=settings.mail_from,
+    MAIL_PORT=settings.mail_port,
+    MAIL_SERVER=settings.mail_server,
+    MAIL_STARTTLS=settings.mail_starttls,
+    MAIL_SSL_TLS=settings.mail_ssl_tls,
+    USE_CREDENTIALS=settings.use_credentials,
+    VALIDATE_CERTS=settings.validate_certs
 )
 
-# Create an instance of FastMail (Mailtrap client)
+# ✅ FastAPI-Mail instance
 mail = FastMail(config)
 
 class EmailService:
@@ -30,7 +32,7 @@ class EmailService:
 
     async def send_user_email(self, user_data: dict, email_type: str):
         """
-        Method to send an email to the user based on the email type.
+        Send an email using the template and SMTPClient based on email_type.
         """
         subject_map = {
             'email_verification': "Verify Your Account",
@@ -41,39 +43,33 @@ class EmailService:
         if email_type not in subject_map:
             raise ValueError("Invalid email type")
 
-        # Render email content using the template
         html_content = self.template_manager.render_template(email_type, **user_data)
-
-        # Sending email via SMTPClient
         self.smtp_client.send_email(subject_map[email_type], html_content, user_data['email'])
 
     async def send_verification_email(self, user: User):
         """
-        Send a verification email to the user with the verification link.
+        Send a verification email with a verification link using SMTPClient.
         """
         verification_url = f"{settings.server_base_url}verify-email/{user.id}/{user.verification_token}"
-
-        # Prepare user data for the email template
         user_data = {
             "name": user.first_name,
             "verification_url": verification_url,
             "email": user.email
         }
-
-        # Send the verification email
         await self.send_user_email(user_data, 'email_verification')
         
     async def send_email_via_fastapi_mail(self, user: User):
         """
-        Sends an email through FastAPI Mail (Mailtrap)
+        Send a verification email using FastAPI-Mail.
         """
-        # Compose the email message
         message = MessageSchema(
             subject="Verify Your Account",
             recipients=[user.email],
-            body=f"Hello {user.first_name},\n\nPlease verify your email using the following link: {settings.server_base_url}verify-email/{user.id}/{user.verification_token}",
+            body=(
+                f"Hello {user.first_name},<br><br>"
+                f"Please verify your email using the following link: "
+                f"<a href='{settings.server_base_url}verify-email/{user.id}/{user.verification_token}'>Verify Email</a>"
+            ),
             subtype="html"
         )
-        
-        # Send the email using FastMail
         await mail.send_message(message)
