@@ -9,7 +9,8 @@ from app.models.user_model import UserRole
 @pytest.fixture
 def user_base_data():
     return {
-        "nickname": "john_doe_123",import uuid
+        "nickname": "john_doe_123",
+    }
 import pytest
 from pydantic import ValidationError
 from datetime import datetime
@@ -151,6 +152,7 @@ def test_user_create_with_explicit_role(user_create_data):
     user_create_data["role"] = UserRole.ADMIN
     user = UserCreate(**user_create_data)
     assert user.role == UserRole.ADMIN
+    {
         "email": "john.doe@example.com",
         "first_name": "John",
         "last_name": "Doe",
