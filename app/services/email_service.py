@@ -21,10 +21,10 @@ mail = FastMail(config)
 class EmailService:
     def __init__(self, template_manager: TemplateManager):
         self.smtp_client = SMTPClient(
-            server=settings.smtp_server,
-            port=settings.smtp_port,
-            username=settings.smtp_username,
-            password=settings.smtp_password
+            server=settings.mail_server,
+            port=settings.mail_port,
+            username=settings.mail_username,
+            password=settings.mail_password
         )
         self.template_manager = template_manager
 

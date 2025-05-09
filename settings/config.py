@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = 'utf-8'
+        extra = Extra.allow  # Allow extra fields to be passed without validation errors
 
 # ✅ Create a settings instance
 settings = Settings()
